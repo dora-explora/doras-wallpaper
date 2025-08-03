@@ -49,11 +49,14 @@ float random (in float seed) {
     return fract(sin(seed) * 43758.5453123);
 }
 
+// COLOR CUSTOMIZATION OPTIONS
+// You can edit the rgb values of these colors to change the pallete to your liking!
+// DO NOT edit the alpha values, they are important to the program
 const vec4 FOREGROUND = vec4(0.3, 0.9, 0.3, 1.);
-const vec4 FOREGROUND_DIM = vec4(0.1, 0.4, 0.6, 1.);
+const vec4 FOREGROUND_DIM = vec4(1., 0.84, 1., 1.);
 const vec4 BACKGROUND = vec4(0.17, 0.04, 0.2, 0.);
-const vec4 CHARGING = vec4(1., 1., 0., 0.5);
-const vec4 BUTTON = vec4(1., 0.5, 0., 0.);
+const vec4 CHARGING = vec4(0.7, 0.55, 0., 0.5);
+const vec4 BUTTON = vec4(0.2, 0.9, 0.8, 0.);
 
 void main() {
     int x = int(gl_FragCoord.x);
@@ -82,7 +85,8 @@ void main() {
         if (color[3] < 0.2) {
             color = BACKGROUND + (0.04 * sin(3. * time + 0.03 * (-gl_FragCoord.x + gl_FragCoord.y)));
 
-            if (get_data()[0] > 0.) {
+            // handles charging indicator
+            if (get_data()[0] > 0.) { 
                 float threshold = 20. + 40. * get_data()[0] + 4. * sin(2. * time);
                 vec4 old_color = color;
                 float dist = distance(gl_FragCoord.xy, vec2(33.5, -30.));
@@ -93,6 +97,7 @@ void main() {
                 }
             }
 
+            // handles button glow
             if (distance(gl_FragCoord.xy, vec2(34, 42.)) < 8.) {
                 vec4 old_color = color;
                 float threshold = 9. + sin(2. * time);
@@ -108,7 +113,8 @@ void main() {
         if (directed) {
             touch = vec2(int(pointers[0].x / 5.) * 5, int(pointers[0].y / 5.) * 5);
         }
-        if (y % 5 == 0 && x > 1 && x < 68) { // runs if on horizontal lines of grid
+
+        if (y % 5 == 0 && x > 1 && x < 68) { // runs if on the horizontal lines of the grid
             if (x % 5 == 2) { // runs if in a deciding position
                 if (get_check(-1., 0.)) {
                     if (!directed) {
@@ -127,11 +133,12 @@ void main() {
                 }
             }
         }
-        if (x % 5 == 1 && y >= 0 && y < 150) { // runs if on vertical lines of grid
+
+        if (x % 5 == 1 && y >= 0 && y < 150) { // runs if on the vertical lines of the grid
             if (y % 5 == 4) { // runs if in a deciding position
                 if (get_check(0., 1.)) {
                     if (!directed) {
-                        if (random(seed + 71.) <= 0.5) {
+                        if (random(seed + 70. + 1.) <= 0.5) {
                             color = FOREGROUND;
                         }
                     } else {
@@ -147,23 +154,28 @@ void main() {
             }
         }
 
-        if (frame % 7 == 0 && ((x == 1 && y > 5 && y % 5 == 0) || (x < 70 && x % 5 == 1 && y == 150))) {
+        // handles spawning pixels at the top and left
+        if (frame % 7 == 0 && 
+        ((x == 1 && y > 5 && y % 5 == 0) || 
+        (x < 70 && x % 5 == 1 && y == 150))
+        ) {
             if (random(seed) < 0.1) {
                 color = FOREGROUND;
             }
         }
 
-        if (notificationCount == 0) {
+        // handles dimming lines under the clock
+        if (notificationCount == 0) { // runs if the clock is in the center
             if ((16 < x && x < 51) && (60 < y && y < 110)) {
                 if (color == FOREGROUND) {
                 	color = FOREGROUND_DIM;
                 }
             }
-        } else {
+        } else { // runs if the clock is at the top
         	if (
-        		((int(daytime[0]) % 12 < 10) && (2 < x && x < 26) && (129 < y && y < 141)) ||
-        		((int(daytime[0]) % 12 >= 10) && (2 < x && x < 31) && (129 < y && y < 141))
-        		) {
+        	((int(daytime[0]) % 12 < 10) && (2 < x && x < 26) && (129 < y && y < 141)) || // runs if hours has one digit
+        	((int(daytime[0]) % 12 >= 10 || int(daytime[0]) == 0) && (2 < x && x < 31) && (129 < y && y < 141)) // runs if hours has two
+        	) {
         		  if (color == FOREGROUND) {
         				color = FOREGROUND_DIM;
         		  }
